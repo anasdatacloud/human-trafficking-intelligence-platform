@@ -21,7 +21,8 @@ It follows enterprise-grade data warehousing principles using the Kimball method
 
 ## Architecture Overview
 
-![Architecture](./architecture/architecture.png)
+<img width="1441" height="892" alt="ADF Architecture" src="https://github.com/user-attachments/assets/317c0867-d816-4ec2-8a66-92f9ee909a1f" />
+
 
 ### Data Flow
 
@@ -66,31 +67,10 @@ It follows enterprise-grade data warehousing principles using the Kimball method
 
 ### Star Schema Design
 
-![Data Model](./architecture/data_model.png)
+<img width="2395" height="2081" alt="Data Model - Copy" src="https://github.com/user-attachments/assets/be824faa-faf1-4842-8f3c-7cb2f67fe146" />
 
-* Fact Tables:
 
-  * FactCases
-  * FactIncidents
 
-* Dimension Tables:
-
-  * DimVictim
-  * DimLocation
-  * DimDate
-  * DimAgency
-  * DimTraffickingType
-
----
-
-## Bus Matrix
-
-![Bus Matrix](./architecture/bus_matrix.png)
-
-* Defines business processes and conformed dimensions
-* Ensures consistency across fact tables
-
----
 
 ## Keys and Historical Tracking
 
@@ -103,19 +83,7 @@ It follows enterprise-grade data warehousing principles using the Kimball method
 * Type 2: Full history tracking
 * Type 3: Limited history
 
----
 
-## Data Pipeline (ADF)
-
-![ADF Pipeline](./architecture/adf_pipeline.png)
-
-### Features:
-
-* Incremental data loading
-* Parameterized pipelines
-* Error handling and logging
-
----
 
 ## Data Quality and Governance
 
@@ -128,7 +96,17 @@ It follows enterprise-grade data warehousing principles using the Kimball method
 
 ## Power BI Analytics
 
-![Dashboard](./screenshots/powerbi_dashboard.png)
+<img width="1148" height="642" alt="image" src="https://github.com/user-attachments/assets/004ce2b9-2656-4621-b19f-e6e0bf257376" />
+
+<img width="1114" height="647" alt="image" src="https://github.com/user-attachments/assets/b391eec9-9874-4d61-b88c-ffffd59f0d13" />
+
+<img width="1045" height="654" alt="image" src="https://github.com/user-attachments/assets/c7fe47a0-a099-44f3-bf8c-5edea5ac0ab6" />
+
+<img width="1036" height="652" alt="image" src="https://github.com/user-attachments/assets/6bde8928-5a8e-40f6-a29c-45084c6968ff" />
+
+<img width="1113" height="635" alt="image" src="https://github.com/user-attachments/assets/f23d38bd-4997-4d38-b78e-db36cb44850c" />
+
+
 
 ### Key Insights:
 
