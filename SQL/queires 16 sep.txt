@@ -1,0 +1,1029 @@
+create table silver.DimCase (
+    CaseID int IDENTITY(1,1) NOT NULL,
+    ReportID varchar(100),
+    CaseDate DATE NULL
+);
+
+
+
+select top(100) * from Bronze.Synthetic_HumanTraffickingCases;
+
+insert into silver.DimCase (ReportID, CaseDate)
+select distinct Report_ID, Case_Date from Bronze.Synthetic_HumanTraffickingCases;
+
+
+
+
+
+-- Victim-based mappings
+CREATE TABLE silver.mapVictimDateID
+(
+    VictimID INT NOT NULL,
+    DateID   INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(VictimID), HEAP);
+
+CREATE TABLE silver.mapVictimLocationID
+(
+    VictimID   INT NOT NULL,
+    LocationID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(VictimID), HEAP);
+
+CREATE TABLE silver.mapVictimTraffickerID
+(
+    VictimID     INT NOT NULL,
+    TraffickerID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(VictimID), HEAP);
+
+CREATE TABLE silver.mapVictimRecruitmentTypeID
+(
+    VictimID           INT NOT NULL,
+    RecruitmentTypeID  INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(VictimID), HEAP);
+
+CREATE TABLE silver.mapVictimTransportTypeID
+(
+    VictimID       INT NOT NULL,
+    TransportTypeID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(VictimID), HEAP);
+
+CREATE TABLE silver.mapVictimExploitationTypeID
+(
+    VictimID          INT NOT NULL,
+    ExploitationTypeID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(VictimID), HEAP);
+
+CREATE TABLE silver.mapVictimCaseID
+(
+    VictimID INT NOT NULL,
+    CaseID   INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(VictimID), HEAP);
+
+-- Date-based mappings
+CREATE TABLE silver.mapDateLocationID
+(
+    DateID     INT NOT NULL,
+    LocationID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(DateID), HEAP);
+
+CREATE TABLE silver.mapDateTraffickerID
+(
+    DateID       INT NOT NULL,
+    TraffickerID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(DateID), HEAP);
+
+CREATE TABLE silver.mapDateRecruitmentTypeID
+(
+    DateID            INT NOT NULL,
+    RecruitmentTypeID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(DateID), HEAP);
+
+CREATE TABLE silver.mapDateTransportTypeID
+(
+    DateID        INT NOT NULL,
+    TransportTypeID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(DateID), HEAP);
+
+CREATE TABLE silver.mapDateExploitationTypeID
+(
+    DateID           INT NOT NULL,
+    ExploitationTypeID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(DateID), HEAP);
+
+CREATE TABLE silver.mapDateCaseID
+(
+    DateID INT NOT NULL,
+    CaseID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(DateID), HEAP);
+
+-- Location-based mappings
+CREATE TABLE silver.mapLocationTraffickerID
+(
+    LocationID   INT NOT NULL,
+    TraffickerID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(LocationID), HEAP);
+
+CREATE TABLE silver.mapLocationRecruitmentTypeID
+(
+    LocationID        INT NOT NULL,
+    RecruitmentTypeID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(LocationID), HEAP);
+
+CREATE TABLE silver.mapLocationTransportTypeID
+(
+    LocationID     INT NOT NULL,
+    TransportTypeID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(LocationID), HEAP);
+
+CREATE TABLE silver.mapLocationExploitationTypeID
+(
+    LocationID        INT NOT NULL,
+    ExploitationTypeID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(LocationID), HEAP);
+
+CREATE TABLE silver.mapLocationCaseID
+(
+    LocationID INT NOT NULL,
+    CaseID     INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(LocationID), HEAP);
+
+-- Trafficker-based mappings
+CREATE TABLE silver.mapTraffickerRecruitmentTypeID
+(
+    TraffickerID      INT NOT NULL,
+    RecruitmentTypeID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(TraffickerID), HEAP);
+
+CREATE TABLE silver.mapTraffickerTransportTypeID
+(
+    TraffickerID   INT NOT NULL,
+    TransportTypeID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(TraffickerID), HEAP);
+
+CREATE TABLE silver.mapTraffickerExploitationTypeID
+(
+    TraffickerID      INT NOT NULL,
+    ExploitationTypeID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(TraffickerID), HEAP);
+
+CREATE TABLE silver.mapTraffickerCaseID
+(
+    TraffickerID INT NOT NULL,
+    CaseID       INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(TraffickerID), HEAP);
+
+-- Recruitment-based mappings
+CREATE TABLE silver.mapRecruitmentTypeTransportTypeID
+(
+    RecruitmentTypeID INT NOT NULL,
+    TransportTypeID   INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(RecruitmentTypeID), HEAP);
+
+CREATE TABLE silver.mapRecruitmentTypeExploitationTypeID
+(
+    RecruitmentTypeID INT NOT NULL,
+    ExploitationTypeID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(RecruitmentTypeID), HEAP);
+
+CREATE TABLE silver.mapRecruitmentTypeCaseID
+(
+    RecruitmentTypeID INT NOT NULL,
+    CaseID            INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(RecruitmentTypeID), HEAP);
+
+-- Transport-based mappings
+CREATE TABLE silver.mapTransportTypeCaseID
+(
+    TransportTypeID INT NOT NULL,
+    CaseID          INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(TransportTypeID), HEAP);
+
+-- Exploitation-based mappings
+CREATE TABLE silver.mapExploitationTypeCaseID
+(
+    ExploitationTypeID INT NOT NULL,
+    CaseID             INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(ExploitationTypeID), HEAP);
+
+
+
+
+/* Victim-based Mappings */
+INSERT INTO Silver.mapVictimDateID (VictimID, DateID)
+SELECT  
+-- count(*)
+distinct v.VictimID, d.DateID
+FROM  Bronze.Synthetic_HumanTraffickingCases b
+JOIN Silver.DimVictim v ON b.VictimNationalID = v.NationalID and v.IsCurrent = 1
+JOIN Silver.DimDateTime d ON b.FullDate = d.FullDate;
+
+INSERT INTO Silver.mapVictimLocationID (VictimID, LocationID)
+SELECT 
+count(*)
+distinct v.VictimID, l.LocationID
+FROM  Bronze.Synthetic_HumanTraffickingCases b
+JOIN  Silver.DimVictim v ON b.VictimNationalID = v.NationalID and v.IsCurrent = 1
+JOIN Silver.DimLocation l ON b.Address = l.Address AND b.Zipcode = l.Zipcode;
+
+INSERT INTO Silver.mapVictimTraffickerID (VictimID, TraffickerID)
+SELECT 
+v.VictimID, t.TraffickerID
+FROM Bronze.Synthetic_HumanTraffickingCases b
+JOIN Silver.DimVictim v ON b.VictimNationalID = v.NationalID and v.IsCurrent = 1
+JOIN Silver.DimTrafficker t ON b.TraffickerNationalID = t.NationalID and t.IsCurrent = 1;
+
+INSERT INTO Silver.mapVictimRecruitmenttypeID (VictimID, RecruitmentTypeID)
+SELECT  
+DISTINCT v.VictimID, r.RecruitmentTypeID
+FROM Bronze.Synthetic_HumanTraffickingCases b
+JOIN Silver.DimVictim v ON b.VictimNationalID = v.NationalID and IsCurrent = 1
+JOIN  Silver.DimRecruitmentType r ON b.RecruitmentTypeName = r.RecruitmentTypeName
+and b.RecruitmentDescription = r.description;
+
+INSERT INTO Silver.mapVictimTransportTypeID (VictimID, TransportTypeID)
+SELECT 
+-- count(*)
+DISTINCT v.VictimID, tpt.transportationtypeid
+FROM Bronze.Synthetic_HumanTraffickingCases b
+JOIN Silver.DimVictim v ON b.VictimNationalID = v.NationalID  and IsCurrent = 1
+JOIN   Silver.DimTransportationType tpt ON b.TransportationMode = tpt.TransportationMode
+and b.TransportationMethod = tpt.TransportationMethod;
+
+INSERT INTO Silver.mapVictimExploitationTypeID (VictimID, ExploitationTypeID)
+SELECT 
+-- count(*)
+DISTINCT v.VictimID, e.ExploitationTypeID
+FROM Bronze.Synthetic_HumanTraffickingCases b
+JOIN Silver.DimVictim v ON b.VictimNationalID = v.NationalID and IsCurrent =1
+JOIN  Silver.DimExploitationType e ON b.ExploitationType = e.ExploitationType
+and b.ExploitationSubtype = e.ExploitationSubtype;
+
+INSERT INTO Silver.mapVictimCaseID (VictimID, CaseID)
+SELECT 
+-- count(*)
+DISTINCT v.VictimID, c.CaseID
+FROM Bronze.Synthetic_HumanTraffickingCases b
+JOIN  Silver.DimVictim v ON b.VictimNationalID = v.NationalID and IsCurrent =1
+JOIN Silver.DimCase c ON b.Report_ID = c.ReportID;
+
+
+/* Date-based Mappings */
+INSERT INTO Silver.mapDateLocationID (DateID, LocationID)
+SELECT 
+-- count(*)
+DISTINCT d.DateID, l.LocationID
+FROM Bronze.Synthetic_HumanTraffickingCases b
+JOIN Silver.DimDateTime d ON b.FullDate = d.FullDate
+JOIN Silver.DimLocation l ON b.Address = l.Address AND b.Zipcode = l.Zipcode;
+
+INSERT INTO Silver.mapDateTraffickerID (DateID, TraffickerID)
+SELECT
+-- count(*)
+ DISTINCT d.DateID, t.TraffickerID
+FROM Bronze.Synthetic_HumanTraffickingCases b
+JOIN Silver.DimDateTime d ON b.FullDate = d.FullDate
+JOIN Silver.DimTrafficker t ON b.TraffickerNationalID = t.NationalID and t.IsCurrent = 1;
+
+INSERT INTO Silver.mapDateRecruitmentTypeID (DateID, RecruitmentTypeID)
+SELECT
+-- count(*)
+ DISTINCT d.DateID, r.RecruitmentTypeID
+FROM Bronze.Synthetic_HumanTraffickingCases b
+JOIN Silver.DimDateTime d ON b.FullDate = d.FullDate
+JOIN Silver.DimRecruitmentType r ON b.RecruitmentTypeName = r.RecruitmentTypeName
+and b.RecruitmentDescription = r.Description;
+
+INSERT INTO Silver.mapDateTransportTypeID (DateID, TransportTypeID)
+SELECT 
+-- count(*)
+DISTINCT d.DateID, tpt.TransportationTypeID
+FROM Bronze.Synthetic_HumanTraffickingCases b
+JOIN Silver.DimDateTime d ON b.FullDate = d.FullDate
+JOIN Silver.DimTransportationType tpt ON b.TransportationMode = tpt.TransportationMode
+and b.TransportationMethod = tpt.TransportationMethod;
+;
+
+INSERT INTO Silver.mapDateExploitationTypeID (DateID, ExploitationTypeID)
+SELECT 
+-- count(*)
+DISTINCT d.DateID, e.ExploitationTypeID
+FROM Bronze.Synthetic_HumanTraffickingCases b
+JOIN Silver.DimDateTime d ON b.FullDate = d.FullDate
+JOIN Silver.DimExploitationType e ON b.ExploitationType = e.ExploitationType
+and b.ExploitationSubtype = e.ExploitationSubtype;
+
+INSERT INTO Silver.mapDateCaseID (DateID, CaseID)
+SELECT
+-- count(*)
+ DISTINCT d.DateID, c.CaseID
+FROM Bronze.Synthetic_HumanTraffickingCases b
+JOIN Silver.DimDateTime d ON b.FullDate = d.FullDate
+JOIN Silver.DimCase c ON b.Report_ID = c.ReportID;
+
+
+/* Location-based Mappings */
+INSERT INTO Silver.mapLocationTraffickerID (LocationID, TraffickerID)
+SELECT 
+-- count(*)
+DISTINCT l.LocationID, t.TraffickerID
+FROM Bronze.Synthetic_HumanTraffickingCases b
+JOIN Silver.DimLocation l ON b.Address = l.Address AND b.Zipcode = l.Zipcode
+JOIN Silver.DimTrafficker t ON b.TraffickerNationalID = t.NationalID
+and t.iscurrent = 1;
+
+INSERT INTO Silver.mapLocationRecruitmentTypeID (LocationID, RecruitmentTypeID)
+SELECT 
+-- count(*)
+DISTINCT l.LocationID, r.RecruitmentTypeID
+FROM Bronze.Synthetic_HumanTraffickingCases b
+JOIN Silver.DimLocation l ON b.Address = l.Address AND b.Zipcode = l.Zipcode 
+JOIN Silver.DimRecruitmentType r ON b.RecruitmentTypeName = r.RecruitmentTypeName
+and b.RecruitmentDescription = r.Description;;
+
+INSERT INTO Silver.mapLocationTransportTypeID (LocationID, TransportTypeID)
+SELECT
+-- count(*)
+ DISTINCT l.LocationID, tpt.TransportationTypeID
+FROM Bronze.Synthetic_HumanTraffickingCases b
+JOIN Silver.DimLocation l ON b.Address = l.Address AND b.Zipcode = l.Zipcode
+JOIN Silver.DimTransportationType tpt ON b.TransportationMode = tpt.TransportationMode
+and b.TransportationMethod = tpt.TransportationMethod;;
+
+INSERT INTO Silver.mapLocationExploitationTypeID (LocationID, ExploitationTypeID)
+SELECT 
+-- count(*)
+DISTINCT l.LocationID, e.ExploitationTypeID
+FROM Bronze.Synthetic_HumanTraffickingCases b
+JOIN Silver.DimLocation l ON b.Address = l.Address AND b.Zipcode = l.Zipcode
+JOIN Silver.DimExploitationType e ON b.ExploitationType = e.ExploitationType
+and b.ExploitationSubtype = e.ExploitationSubtype;
+
+INSERT INTO Silver.mapLocationCaseID (LocationID, CaseID)
+SELECT 
+-- count(*)
+DISTINCT l.LocationID, c.CaseID
+FROM Bronze.Synthetic_HumanTraffickingCases b
+JOIN Silver.DimLocation l ON b.Address = l.Address AND b.Zipcode = l.Zipcode
+JOIN Silver.DimCase c ON b.Report_ID = c.ReportID;
+
+
+/* Trafficker-based Mappings */
+INSERT INTO Silver.mapTraffickerRecruitmentTypeID (TraffickerID, RecruitmentTypeID)
+SELECT
+-- count(*)
+ DISTINCT t.TraffickerID, r.RecruitmentTypeID
+FROM Bronze.Synthetic_HumanTraffickingCases b
+JOIN Silver.DimTrafficker t ON b.TraffickerNationalID = t.NationalID and t.iscurrent = 1
+JOIN Silver.DimRecruitmentType r ON b.RecruitmentTypeName = r.RecruitmentTypeName
+and b.RecruitmentDescription = r.Description;
+
+INSERT INTO Silver.mapTraffickerTransportTypeID (TraffickerID, TransportTypeID)
+SELECT 
+-- count(*)
+DISTINCT t.TraffickerID, tpt.TransportationTypeID
+FROM Bronze.Synthetic_HumanTraffickingCases b
+JOIN Silver.DimTrafficker t ON b.TraffickerNationalID = t.NationalID and t.iscurrent = 1
+JOIN Silver.DimTransportationType tpt ON b.TransportationMode = tpt.TransportationMode
+and b.TransportationMethod = tpt.TransportationMethod;;
+
+INSERT INTO Silver.mapTraffickerExploitationTypeID (TraffickerID, ExploitationTypeID)
+SELECT
+-- count(*)
+ DISTINCT t.TraffickerID, e.ExploitationTypeID
+FROM Bronze.Synthetic_HumanTraffickingCases b
+JOIN Silver.DimTrafficker t ON b.TraffickerNationalID = t.NationalID and t.iscurrent = 1
+JOIN Silver.DimExploitationType e ON b.ExploitationType = e.ExploitationType
+and b.ExploitationSubtype = e.ExploitationSubtype;
+
+INSERT INTO Silver.mapTraffickerCaseID (TraffickerID, CaseID)
+SELECT 
+-- count(*)
+DISTINCT t.TraffickerID, c.CaseID
+FROM Bronze.Synthetic_HumanTraffickingCases b
+JOIN Silver.DimTrafficker t ON b.TraffickerNationalID = t.NationalID and t.iscurrent = 1
+JOIN Silver.DimCase c ON b.Report_ID = c.ReportID;
+
+
+/* RecruitmentType-based Mappings */
+INSERT INTO Silver.mapRecruitmentTypeTransportTypeID (RecruitmentTypeID, TransportTypeID)
+SELECT
+-- count(*)
+ DISTINCT r.RecruitmentTypeID, tpt.TransportationTypeID
+FROM Bronze.Synthetic_HumanTraffickingCases b
+JOIN Silver.DimRecruitmentType r ON b.RecruitmentTypeName = r.RecruitmentTypeName
+and b.RecruitmentDescription = r.Description
+JOIN Silver.DimTransportationType tpt ON b.TransportationMode = tpt.TransportationMode
+and b.TransportationMethod = tpt.TransportationMethod
+;
+
+INSERT INTO Silver.mapRecruitmentTypeExploitationTypeID (RecruitmentTypeID, ExploitationTypeID)
+SELECT 
+-- count(*)
+DISTINCT r.RecruitmentTypeID, e.ExploitationTypeID
+FROM Bronze.Synthetic_HumanTraffickingCases b
+JOIN Silver.DimRecruitmentType r ON b.RecruitmentTypeName = r.RecruitmentTypeName
+and b.RecruitmentDescription = r.Description
+JOIN Silver.DimExploitationType e ON b.ExploitationType = e.ExploitationType
+and b.ExploitationSubtype = e.ExploitationSubtype;
+
+INSERT INTO Silver.mapRecruitmentTypeCaseID (RecruitmentTypeID, CaseID)
+SELECT 
+-- count(*)
+DISTINCT r.RecruitmentTypeID, c.CaseID
+FROM Bronze.Synthetic_HumanTraffickingCases b
+JOIN Silver.DimRecruitmentType r ON b.RecruitmentTypeName = r.RecruitmentTypeName
+and b.RecruitmentDescription = r.Description
+JOIN Silver.DimCase c ON b.Report_ID = c.ReportID;
+
+
+
+/* TransportType-based Mappings */
+INSERT INTO  Silver.mapTransportTypeExploitationTypeID (TransportTypeID, ExploitationTypeID)
+SELECT 
+-- count(*)
+DISTINCT tpt.TransportationTypeID, e.ExploitationTypeID
+FROM Bronze.Synthetic_HumanTraffickingCases b
+JOIN Silver.DimTransportationType tpt ON b.TransportationMode = tpt.TransportationMode
+and b.TransportationMethod = tpt.TransportationMethod
+JOIN Silver.DimExploitationType e ON b.ExploitationType = e.ExploitationType
+and b.ExploitationSubtype = e.ExploitationSubtype;;
+
+INSERT INTO Silver.mapTransportTypeCaseID (TransportTypeID, CaseID)
+SELECT 
+-- count(*)
+DISTINCT tpt.TransportationTypeID, c.CaseID
+FROM Bronze.Synthetic_HumanTraffickingCases b
+JOIN Silver.DimTransportationType tpt ON b.TransportationMode = tpt.TransportationMode
+and b.TransportationMethod = tpt.TransportationMethod
+JOIN Silver.DimCase c ON b.Report_ID = c.ReportID;
+
+
+/* ExploitationType-based Mappings */
+INSERT INTO Silver.mapExploitationTypeCaseID (ExploitationTypeID, CaseID)
+SELECT 
+-- count(*)
+DISTINCT e.ExploitationTypeID, c.CaseID
+FROM Bronze.Synthetic_HumanTraffickingCases b
+JOIN Silver.DimExploitationType e ON b.ExploitationType = e.ExploitationType
+and b.ExploitationSubtype = e.ExploitationSubtype
+JOIN Silver.DimCase c ON b.Report_ID = c.ReportID;
+
+
+
+select count(*) from gold.factincident;
+
+INSERT INTO Silver.FactIncident (
+    DateID,
+    LocationID,
+    VictimID,
+    TraffickerID,
+    RecruitmentTypeID,
+    TransportTypeID,
+    ExploitationTypeID,
+    CaseID
+)
+
+SELECT 
+    COUNT(*) 
+    -- If you want distinct combinations instead:
+    -- COUNT(DISTINCT v.VictimID, vd.DateID, vl.LocationID, vt.TraffickerID,
+    --                      vr.RecruitmentTypeID, vtt.TransportTypeID, 
+    --                      ve.ExploitationTypeID, vc.CaseID) 
+FROM Silver.DimVictim v
+
+-- Victim–Case (anchor)
+JOIN Silver.mapVictimCaseID vc
+    ON v.VictimID = vc.VictimID
+
+-- Victim–Date
+JOIN Silver.mapVictimDateID vd 
+    ON v.VictimID = vd.VictimID
+   AND vc.CaseID  = vd.CaseID   -- case alignment
+
+-- Victim–Location
+JOIN Silver.mapVictimLocationID vl 
+    ON v.VictimID = vl.VictimID
+   AND vc.CaseID  = vl.CaseID
+
+-- Victim–Trafficker
+JOIN Silver.mapVictimTraffickerID vt 
+    ON v.VictimID = vt.VictimID
+   AND vc.CaseID  = vt.CaseID
+
+-- Victim–Recruitment
+JOIN Silver.mapVictimRecruitmentTypeID vr 
+    ON v.VictimID = vr.VictimID
+   AND vc.CaseID  = vr.CaseID
+
+-- Victim–Transport
+JOIN Silver.mapVictimTransportTypeID vtt 
+    ON v.VictimID = vtt.VictimID
+   AND vc.CaseID  = vtt.CaseID
+
+-- Victim–Exploitation
+JOIN Silver.mapVictimExploitationTypeID ve 
+    ON v.VictimID = ve.VictimID
+   AND vc.CaseID  = ve.CaseID;
+
+
+SELECT 
+-- count(*)
+DISTINCT
+    vd.DateID,
+    vl.LocationID,
+    v.VictimID,
+    vt.TraffickerID,
+    vr.RecruitmentTypeID,
+    vtt.TransportTypeID,
+    ve.ExploitationTypeID,
+    vc.CaseID
+FROM Silver.DimVictim v
+
+-- Victim–Date
+JOIN Silver.mapVictimDateID vd 
+    ON v.VictimID = vd.VictimID
+
+-- Victim–Location
+JOIN Silver.mapVictimLocationID vl 
+    ON v.VictimID = vl.VictimID
+
+-- Victim–Trafficker
+JOIN Silver.mapVictimTraffickerID vt 
+    ON v.VictimID = vt.VictimID
+
+-- Victim–Recruitment
+JOIN Silver.mapVictimRecruitmentTypeID vr 
+    ON v.VictimID = vr.VictimID
+
+-- Victim–Transport
+JOIN Silver.mapVictimTransportTypeID vtt 
+    ON v.VictimID = vtt.VictimID
+
+-- Victim–Exploitation
+JOIN Silver.mapVictimExploitationTypeID ve 
+    ON v.VictimID = ve.VictimID
+
+-- Victim–Case
+JOIN Silver.mapVictimCaseID vc
+    ON v.VictimID = vc.VictimID;
+
+
+
+
+
+
+
+
+
+
+
+-- Victim-based
+TRUNCATE TABLE gold.mapVictimDateID;
+TRUNCATE TABLE gold.mapVictimLocationID;
+TRUNCATE TABLE gold.mapVictimTraffickerID;
+TRUNCATE TABLE gold.mapVictimRecruitmentTypeID;
+TRUNCATE TABLE gold.mapVictimTransportTypeID;
+TRUNCATE TABLE gold.mapVictimExploitationTypeID;
+TRUNCATE TABLE gold.mapVictimCaseID;
+
+-- Date-based
+TRUNCATE TABLE gold.mapDateLocationID;
+TRUNCATE TABLE gold.mapDateTraffickerID;
+TRUNCATE TABLE gold.mapDateRecruitmentTypeID;
+TRUNCATE TABLE gold.mapDateTransportTypeID;
+TRUNCATE TABLE gold.mapDateExploitationTypeID;
+TRUNCATE TABLE gold.mapDateCaseID;
+
+-- Location-based
+TRUNCATE TABLE gold.mapLocationTraffickerID;
+TRUNCATE TABLE gold.mapLocationRecruitmentTypeID;
+TRUNCATE TABLE gold.mapLocationTransportTypeID;
+TRUNCATE TABLE gold.mapLocationExploitationTypeID;
+TRUNCATE TABLE gold.mapLocationCaseID;
+
+-- Trafficker-based
+TRUNCATE TABLE gold.mapTraffickerRecruitmentTypeID;
+TRUNCATE TABLE gold.mapTraffickerTransportTypeID;
+TRUNCATE TABLE gold.mapTraffickerExploitationTypeID;
+TRUNCATE TABLE gold.mapTraffickerCaseID;
+
+-- Recruitment-based
+TRUNCATE TABLE gold.mapRecruitmentTypeTransportTypeID;
+TRUNCATE TABLE gold.mapRecruitmentTypeExploitationTypeID;
+TRUNCATE TABLE gold.mapRecruitmentTypeCaseID;
+
+-- Transport-based
+TRUNCATE TABLE gold.mapTransportTypeCaseID;
+
+-- Exploitation-based
+TRUNCATE TABLE gold.mapExploitationTypeCaseID;
+
+
+-- Victim-based mappings
+CREATE TABLE Gold.mapVictimDateID
+(
+    VictimID INT NOT NULL,
+    DateID   INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(VictimID), HEAP);
+
+CREATE TABLE Gold.mapVictimLocationID
+(
+    VictimID   INT NOT NULL,
+    LocationID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(VictimID), HEAP);
+
+CREATE TABLE Gold.mapVictimTraffickerID
+(
+    VictimID     INT NOT NULL,
+    TraffickerID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(VictimID), HEAP);
+
+CREATE TABLE Gold.mapVictimRecruitmentTypeID
+(
+    VictimID           INT NOT NULL,
+    RecruitmentTypeID  INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(VictimID), HEAP);
+
+CREATE TABLE Gold.mapVictimTransportTypeID
+(
+    VictimID       INT NOT NULL,
+    TransportTypeID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(VictimID), HEAP);
+
+CREATE TABLE Gold.mapVictimExploitationTypeID
+(
+    VictimID          INT NOT NULL,
+    ExploitationTypeID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(VictimID), HEAP);
+
+CREATE TABLE Gold.mapVictimCaseID
+(
+    VictimID INT NOT NULL,
+    CaseID   INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(VictimID), HEAP);
+
+-- Date-based mappings
+CREATE TABLE Gold.mapDateLocationID
+(
+    DateID     INT NOT NULL,
+    LocationID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(DateID), HEAP);
+
+CREATE TABLE Gold.mapDateTraffickerID
+(
+    DateID       INT NOT NULL,
+    TraffickerID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(DateID), HEAP);
+
+CREATE TABLE Gold.mapDateRecruitmentTypeID
+(
+    DateID            INT NOT NULL,
+    RecruitmentTypeID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(DateID), HEAP);
+
+CREATE TABLE Gold.mapDateTransportTypeID
+(
+    DateID        INT NOT NULL,
+    TransportTypeID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(DateID), HEAP);
+
+CREATE TABLE Gold.mapDateExploitationTypeID
+(
+    DateID           INT NOT NULL,
+    ExploitationTypeID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(DateID), HEAP);
+
+CREATE TABLE Gold.mapDateCaseID
+(
+    DateID INT NOT NULL,
+    CaseID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(DateID), HEAP);
+
+-- Location-based mappings
+CREATE TABLE Gold.mapLocationTraffickerID
+(
+    LocationID   INT NOT NULL,
+    TraffickerID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(LocationID), HEAP);
+
+CREATE TABLE Gold.mapLocationRecruitmentTypeID
+(
+    LocationID        INT NOT NULL,
+    RecruitmentTypeID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(LocationID), HEAP);
+
+CREATE TABLE Gold.mapLocationTransportTypeID
+(
+    LocationID     INT NOT NULL,
+    TransportTypeID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(LocationID), HEAP);
+
+CREATE TABLE Gold.mapLocationExploitationTypeID
+(
+    LocationID        INT NOT NULL,
+    ExploitationTypeID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(LocationID), HEAP);
+
+CREATE TABLE Gold.mapLocationCaseID
+(
+    LocationID INT NOT NULL,
+    CaseID     INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(LocationID), HEAP);
+
+-- Trafficker-based mappings
+CREATE TABLE Gold.mapTraffickerRecruitmentTypeID
+(
+    TraffickerID      INT NOT NULL,
+    RecruitmentTypeID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(TraffickerID), HEAP);
+
+CREATE TABLE Gold.mapTraffickerTransportTypeID
+(
+    TraffickerID   INT NOT NULL,
+    TransportTypeID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(TraffickerID), HEAP);
+
+CREATE TABLE Gold.mapTraffickerExploitationTypeID
+(
+    TraffickerID      INT NOT NULL,
+    ExploitationTypeID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(TraffickerID), HEAP);
+
+CREATE TABLE Gold.mapTraffickerCaseID
+(
+    TraffickerID INT NOT NULL,
+    CaseID       INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(TraffickerID), HEAP);
+
+-- Recruitment-based mappings
+CREATE TABLE Gold.mapRecruitmentTypeTransportTypeID
+(
+    RecruitmentTypeID INT NOT NULL,
+    TransportTypeID   INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(RecruitmentTypeID), HEAP);
+
+CREATE TABLE Gold.mapRecruitmentTypeExploitationTypeID
+(
+    RecruitmentTypeID INT NOT NULL,
+    ExploitationTypeID INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(RecruitmentTypeID), HEAP);
+
+CREATE TABLE Gold.mapRecruitmentTypeCaseID
+(
+    RecruitmentTypeID INT NOT NULL,
+    CaseID            INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(RecruitmentTypeID), HEAP);
+
+-- Transport-based mappings
+CREATE TABLE Gold.mapTransportTypeCaseID
+(
+    TransportTypeID INT NOT NULL,
+    CaseID          INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(TransportTypeID), HEAP);
+
+-- Exploitation-based mappings
+CREATE TABLE Gold.mapExploitationTypeCaseID
+(
+    ExploitationTypeID INT NOT NULL,
+    CaseID             INT NOT NULL
+)
+WITH (DISTRIBUTION = HASH(ExploitationTypeID), HEAP);
+
+
+
+
+
+
+
+-- Victim-based
+INSERT INTO gold.mapVictimDateID           SELECT DISTINCT VictimID, DateID           FROM silver.mapVictimDateID;
+INSERT INTO gold.mapVictimLocationID       SELECT DISTINCT VictimID, LocationID       FROM silver.mapVictimLocationID;
+INSERT INTO gold.mapVictimTraffickerID     SELECT DISTINCT VictimID, TraffickerID     FROM silver.mapVictimTraffickerID;
+INSERT INTO gold.mapVictimRecruitmentTypeID SELECT DISTINCT VictimID, RecruitmentTypeID FROM silver.mapVictimRecruitmentTypeID;
+INSERT INTO gold.mapVictimTransportTypeID  SELECT DISTINCT VictimID, TransportTypeID  FROM silver.mapVictimTransportTypeID;
+INSERT INTO gold.mapVictimExploitationTypeID SELECT DISTINCT VictimID, ExploitationTypeID FROM silver.mapVictimExploitationTypeID;
+INSERT INTO gold.mapVictimCaseID           SELECT DISTINCT VictimID, CaseID           FROM silver.mapVictimCaseID;
+
+-- Date-based
+INSERT INTO gold.mapDateLocationID         SELECT DISTINCT DateID, LocationID         FROM silver.mapDateLocationID;
+INSERT INTO gold.mapDateTraffickerID       SELECT DISTINCT DateID, TraffickerID       FROM silver.mapDateTraffickerID;
+INSERT INTO gold.mapDateRecruitmentTypeID  SELECT DISTINCT DateID, RecruitmentTypeID  FROM silver.mapDateRecruitmentTypeID;
+INSERT INTO gold.mapDateTransportTypeID    SELECT DISTINCT DateID, TransportTypeID    FROM silver.mapDateTransportTypeID;
+INSERT INTO gold.mapDateExploitationTypeID SELECT DISTINCT DateID, ExploitationTypeID FROM silver.mapDateExploitationTypeID;
+INSERT INTO gold.mapDateCaseID             SELECT DISTINCT DateID, CaseID             FROM silver.mapDateCaseID;
+
+-- Location-based
+INSERT INTO gold.mapLocationTraffickerID   SELECT DISTINCT LocationID, TraffickerID   FROM silver.mapLocationTraffickerID;
+INSERT INTO gold.mapLocationRecruitmentTypeID SELECT DISTINCT LocationID, RecruitmentTypeID FROM silver.mapLocationRecruitmentTypeID;
+INSERT INTO gold.mapLocationTransportTypeID SELECT DISTINCT LocationID, TransportTypeID FROM silver.mapLocationTransportTypeID;
+INSERT INTO gold.mapLocationExploitationTypeID SELECT DISTINCT LocationID, ExploitationTypeID FROM silver.mapLocationExploitationTypeID;
+INSERT INTO gold.mapLocationCaseID         SELECT DISTINCT LocationID, CaseID         FROM silver.mapLocationCaseID;
+
+-- Trafficker-based
+INSERT INTO gold.mapTraffickerRecruitmentTypeID SELECT DISTINCT TraffickerID, RecruitmentTypeID FROM silver.mapTraffickerRecruitmentTypeID;
+INSERT INTO gold.mapTraffickerTransportTypeID   SELECT DISTINCT TraffickerID, TransportTypeID   FROM silver.mapTraffickerTransportTypeID;
+INSERT INTO gold.mapTraffickerExploitationTypeID SELECT DISTINCT TraffickerID, ExploitationTypeID FROM silver.mapTraffickerExploitationTypeID;
+INSERT INTO gold.mapTraffickerCaseID           SELECT DISTINCT TraffickerID, CaseID             FROM silver.mapTraffickerCaseID;
+
+-- Recruitment-based
+INSERT INTO gold.mapRecruitmentTypeTransportTypeID SELECT DISTINCT RecruitmentTypeID, TransportTypeID FROM silver.mapRecruitmentTypeTransportTypeID;
+INSERT INTO gold.mapRecruitmentTypeExploitationTypeID SELECT DISTINCT RecruitmentTypeID, ExploitationTypeID FROM silver.mapRecruitmentTypeExploitationTypeID;
+INSERT INTO gold.mapRecruitmentTypeCaseID      SELECT DISTINCT RecruitmentTypeID, CaseID FROM silver.mapRecruitmentTypeCaseID;
+
+-- Transport-based
+INSERT INTO gold.mapTransportTypeCaseID        SELECT DISTINCT TransportTypeID, CaseID FROM silver.mapTransportTypeCaseID;
+
+-- Exploitation-based
+INSERT INTO gold.mapExploitationTypeCaseID     SELECT DISTINCT ExploitationTypeID, CaseID FROM silver.mapExploitationTypeCaseID;
+
+select * from silver
+
+
+select top 10 * from gold.DimVictim where VictimID = 135;
+
+
+SELECT 
+DISTINCT
+    vd.DateID,
+    vl.LocationID,
+    v.VictimID,
+    vt.TraffickerID,
+    vr.RecruitmentTypeID,
+    vtt.TransportTypeID,
+    ve.ExploitationTypeID,
+    vc.CaseID
+FROM Gold.DimVictim v
+
+-- Victim–Date
+JOIN Gold.mapVictimDateID vd 
+    ON v.VictimID = vd.VictimID
+
+-- Victim–Location
+JOIN Gold.mapVictimLocationID vl 
+    ON v.VictimID = vl.VictimID
+
+-- Victim–Trafficker
+JOIN Gold.mapVictimTraffickerID vt 
+    ON v.VictimID = vt.VictimID
+
+-- Victim–Recruitment
+JOIN Gold.mapVictimRecruitmentTypeID vr 
+    ON v.VictimID = vr.VictimID
+
+-- Victim–Transport
+JOIN Gold.mapVictimTransportTypeID vtt 
+    ON v.VictimID = vtt.VictimID
+
+-- Victim–Exploitation
+JOIN Gold.mapVictimExploitationTypeID ve 
+    ON v.VictimID = ve.VictimID
+
+-- Victim–Case
+JOIN Gold.mapVictimCaseID vc
+    ON v.VictimID = vc.VictimID;
+
+ALTER TABLE gold.factIncident 
+ADD CaseID INT;
+
+
+INSERT INTO  Gold.FactIncident (
+    DateID,
+    LocationID,
+    VictimID,
+    TraffickerID,
+    RecruitmentTypeID,
+    TransportationTypeID,
+    ExploitationTypeID,
+    CaseID
+)
+
+SELECT 
+-- count(*)
+DISTINCT
+    vd.DateID,
+    vl.LocationID,
+    v.VictimID,
+    vt.TraffickerID,
+    vr.RecruitmentTypeID,
+    vtt.TransportTypeID,
+    ve.ExploitationTypeID,
+    vc.CaseID
+FROM Silver.DimVictim v
+
+-- Victim–Date
+JOIN Silver.mapVictimDateID vd 
+    ON v.VictimID = vd.VictimID
+
+-- Victim–Location
+JOIN Silver.mapVictimLocationID vl 
+    ON v.VictimID = vl.VictimID
+
+-- Victim–Trafficker
+JOIN Silver.mapVictimTraffickerID vt 
+    ON v.VictimID = vt.VictimID
+
+-- Victim–Recruitment
+JOIN Silver.mapVictimRecruitmentTypeID vr 
+    ON v.VictimID = vr.VictimID
+
+-- Victim–Transport
+JOIN Silver.mapVictimTransportTypeID vtt 
+    ON v.VictimID = vtt.VictimID
+
+-- Victim–Exploitation
+JOIN Silver.mapVictimExploitationTypeID ve 
+    ON v.VictimID = ve.VictimID
+
+-- Victim–Case
+JOIN Silver.mapVictimCaseID vc
+    ON v.VictimID = vc.VictimID;
+
+
+
+
+
+
+INSERT INTO  Gold.FactIncident (
+    DateID,
+    LocationID,
+    VictimID,
+    TraffickerID,
+    RecruitmentTypeID,
+    TransportationTypeID,
+    ExploitationTypeID,
+    CaseID
+)
+SELECT 
+-- count(*)
+DISTINCT
+    vd.DateID,
+    vl.LocationID,
+    v.VictimID,
+    vt.TraffickerID,
+    vr.RecruitmentTypeID,
+    vtt.TransportTypeID,
+    ve.ExploitationTypeID,
+    vc.CaseID
+FROM Gold.DimVictim v
+
+-- Victim–Date
+JOIN Gold.mapVictimDateID vd 
+    ON v.VictimID = vd.VictimID
+
+-- Victim–Location
+JOIN Gold.mapVictimLocationID vl 
+    ON v.VictimID = vl.VictimID
+
+-- Victim–Trafficker
+JOIN Gold.mapVictimTraffickerID vt 
+    ON v.VictimID = vt.VictimID
+
+-- Victim–Recruitment
+JOIN Gold.mapVictimRecruitmentTypeID vr 
+    ON v.VictimID = vr.VictimID
+
+-- Victim–Transport
+JOIN Gold.mapVictimTransportTypeID vtt 
+    ON v.VictimID = vtt.VictimID
+
+-- Victim–Exploitation
+JOIN Gold.mapVictimExploitationTypeID ve 
+    ON v.VictimID = ve.VictimID
+
+-- Victim–Case
+JOIN Gold.mapVictimCaseID vc
+    ON v.VictimID = vc.VictimID;
+
+

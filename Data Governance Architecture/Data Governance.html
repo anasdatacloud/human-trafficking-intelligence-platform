@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Warehouse ERD Schema</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: visible;
+            position: relative;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.2rem;
+            font-weight: 300;
+        }
+        
+        .erd-canvas {
+            position: relative;
+            padding: 40px;
+            background: #fafbfc;
+            min-height: 1200px;
+            min-width: 1700px;
+            overflow: visible;
+        }
+        
+        .table-entity {
+            position: absolute;
+            background: white;
+            border: 2px solid #374151;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            min-width: 220px;
+            font-size: 12px;
+            z-index: 10;
+        }
+        
+        .table-entity.data-source { border-color: #3b82f6; }
+        .table-entity.quality { border-color: #10b981; }
+        .table-entity.business { border-color: #8b5cf6; }
+        .table-entity.security { border-color: #f59e0b; }
+        
+        .table-header {
+            background: #374151;
+            color: white;
+            padding: 8px 12px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .data-source .table-header { background: #3b82f6; }
+        .quality .table-header { background: #10b981; }
+        .business .table-header { background: #8b5cf6; }
+        .security .table-header { background: #f59e0b; }
+        
+        .table-fields {
+            padding: 0;
+        }
+        
+        .field {
+            padding: 6px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 10px;
+        }
+        
+        .field:last-child {
+            border-bottom: none;
+        }
+        
+        .field.pk {
+            background: #fef2f2;
+            font-weight: bold;
+            color: #dc2626;
+        }
+        
+        .field.fk {
+            background: #f0fdf4;
+            font-style: italic;
+            color: #059669;
+        }
+        
+        .field-type {
+            font-size: 8px;
+            color: #6b7280;
+            margin-left: 5px;
+        }
+        
+        .relationship-line {
+            position: absolute;
+            z-index: 1;
+        }
+        
+        .line {
+            stroke: #6b7280;
+            stroke-width: 1.5;
+            fill: none;
+            marker-end: url(#arrowhead);
+        }
+        
+        .line.security {
+            stroke: #f59e0b;
+            stroke-dasharray: 5,5;
+        }
+        
+        .section-label {
+            position: absolute;
+            font-size: 14px;
+            font-weight: bold;
+            color: #374151;
+            background: rgba(255,255,255,0.9);
+            padding: 5px 10px;
+            border-radius: 15px;
+            border: 2px solid;
+            z-index: 5;
+        }
+        
+        .section-label.data-sources {
+            border-color: #3b82f6;
+            color: #3b82f6;
+            top: 20px;
+            left: 50px;
+        }
+        
+        .section-label.quality {
+            border-color: #10b981;
+            color: #10b981;
+            top: 20px;
+            left: 600px;
+        }
+        
+        .section-label.business {
+            border-color: #8b5cf6;
+            color: #8b5cf6;
+            top: 20px;
+            left: 1150px;
+        }
+        
+        .section-label.security {
+            border-color: #f59e0b;
+            color: #f59e0b;
+            top: 20px;
+            right: 50px;
+        }
+        
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: white;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 10px;
+            z-index: 15;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            gap: 8px;
+        }
+        
+        .legend-box {
+            width: 15px;
+            height: 10px;
+            border: 1px solid;
+        }
+        
+        .pk-legend { background: #fef2f2; border-color: #dc2626; }
+        .fk-legend { background: #f0fdf4; border-color: #059669; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Data Warehouse Entity Relationship Diagram</h1>
+        </div>
+        
+        <div class="erd-canvas">
+            <!-- Section Labels -->
+            <div class="section-label data-sources">📊 Data Sources</div>
+            <div class="section-label quality">🔍 Quality & Lineage</div>
+            <div class="section-label business">💼 Business Context</div>
+            <div class="section-label security">🔒 Security & Compliance</div>
+            
+            <!-- SVG for relationship lines -->
+            <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/>
+                    </marker>
+                </defs>
+                
+                <!-- Data Source Relationships -->
+                <path class="line" d="M 270 150 L 320 150"/>  <!-- DATA_SOURCES to SOURCE_TYPES -->
+                <path class="line" d="M 150 270 L 150 300"/>  <!-- DATA_SOURCES to DATASETS -->
+                <path class="line" d="M 270 350 L 320 350"/>  <!-- DATASETS to FIELDS -->
+                <path class="line" d="M 150 450 L 150 520"/>  <!-- DATA_SOURCES to GENERATION_CONFIGS -->
+                
+                <!-- Quality Relationships -->
+                <path class="line" d="M 270 380 L 600 180"/>  <!-- DATASETS to DATA_LINEAGE -->
+                <path class="line" d="M 270 400 L 870 180"/>  <!-- DATASETS to DATA_QUALITY_RULES -->
+                <path class="line" d="M 990 200 L 870 300"/>  <!-- DATA_QUALITY_RULES to DATA_QUALITY_RESULTS -->
+                <path class="line" d="M 990 580 L 870 720"/>  <!-- ETL_JOBS to ETL_JOB_RUNS -->
+                
+                <!-- Business Relationships -->
+                <path class="line" d="M 540 380 L 1150 350"/>  <!-- FIELDS to COLUMN_BUSINESS_TERMS -->
+                <path class="line" d="M 1250 200 L 1250 300"/>  <!-- BUSINESS_GLOSSARY to COLUMN_BUSINESS_TERMS -->
+                <path class="line" d="M 1520 200 L 1520 300"/>  <!-- DATA_STEWARDS to TABLE_STEWARDS -->
+                <path class="line" d="M 270 420 L 1420 350"/>  <!-- DATASETS to TABLE_STEWARDS -->
+                <path class="line" d="M 1250 640 L 1250 720"/>  <!-- DATA_CLASSIFICATIONS to COLUMN_CLASSIFICATIONS -->
+                <path class="line" d="M 540 420 L 1150 770"/>  <!-- FIELDS to COLUMN_CLASSIFICATIONS -->
+                
+                <!-- Security Relationships -->
+                <path class="line security" d="M 270 440 L 1420 570"/>  <!-- DATASETS to ACCESS_CONTROLS -->
+                <path class="line security" d="M 270 460 L 1150 920"/>  <!-- DATASETS to DATA_ENCRYPTION -->
+
+                <path class="line security" d="M 1250 640 L 870 920"/>  <!-- DATA_CLASSIFICATIONS to COMPLIANCE_CHECKS -->
+            </svg>
+            
+            <!-- Data Sources & Assets Tables -->
+            <div class="table-entity data-source" style="top: 80px; left: 50px;">
+                <div class="table-header">DATA_SOURCES</div>
+                <div class="table-fields">
+                    <div class="field pk">source_id <span class="field-type">INT</span></div>
+                    <div class="field fk">type_id <span class="field-type">INT</span></div>
+                    <div class="field">source_name <span class="field-type">VARCHAR</span></div>
+                    <div class="field">source_type <span class="field-type">VARCHAR</span></div>
+                    <div class="field">connection_info <span class="field-type">TEXT</span></div>
+                    <div class="field">format <span class="field-type">VARCHAR</span></div>
+                    <div class="field">refresh_frequency <span class="field-type">VARCHAR</span></div>
+                    <div class="field">last_updated <span class="field-type">TIMESTAMP</span></div>
+                    <div class="field">status <span class="field-type">VARCHAR</span></div>
+                </div>
+            </div>
+            
+            <div class="table-entity data-source" style="top: 80px; left: 320px;">
+                <div class="table-header">SOURCE_TYPES</div>
+                <div class="table-fields">
+                    <div class="field pk">type_id <span class="field-type">INT</span></div>
+                    <div class="field">type_name <span class="field-type">VARCHAR</span></div>
+                    <div class="field">category <span class="field-type">VARCHAR</span></div>
+                    <div class="field">description <span class="field-type">TEXT</span></div>
+                    <div class="field">connection_template <span class="field-type">TEXT</span></div>
+                    <div class="field">supported_formats <span class="field-type">VARCHAR</span></div>
+                    <div class="field">is_active <span class="field-type">BOOLEAN</span></div>
+                </div>
+            </div>
+            
+            <div class="table-entity data-source" style="top: 300px; left: 50px;">
+                <div class="table-header">DATASETS</div>
+                <div class="table-fields">
+                    <div class="field pk">dataset_id <span class="field-type">INT</span></div>
+                    <div class="field fk">source_id <span class="field-type">INT</span></div>
+                    <div class="field">dataset_name <span class="field-type">VARCHAR</span></div>
+                    <div class="field">dataset_type <span class="field-type">VARCHAR</span></div>
+                    <div class="field">location_path <span class="field-type">VARCHAR</span></div>
+                    <div class="field">size_mb <span class="field-type">DECIMAL</span></div>
+                    <div class="field">record_count <span class="field-type">BIGINT</span></div>
+                </div>
+            </div>
+            
+            <div class="table-entity data-source" style="top: 300px; left: 320px;">
+                <div class="table-header">FIELDS</div>
+                <div class="table-fields">
+                    <div class="field pk">field_id <span class="field-type">INT</span></div>
+                    <div class="field fk">dataset_id <span class="field-type">INT</span></div>
+                    <div class="field">field_name <span class="field-type">VARCHAR</span></div>
+                    <div class="field">data_type <span class="field-type">VARCHAR</span></div>
+                    <div class="field">is_nullable <span class="field-type">BOOLEAN</span></div>
+                    <div class="field">is_key_field <span class="field-type">BOOLEAN</span></div>
+                    <div class="field">description <span class="field-type">TEXT</span></div>
+                    <div class="field">business_name <span class="field-type">VARCHAR</span></div>
+                </div>
+            </div>
+            
+            <div class="table-entity data-source" style="top: 520px; left: 50px;">
+                <div class="table-header">GENERATION_CONFIGS</div>
+                <div class="table-fields">
+                    <div class="field pk">config_id <span class="field-type">INT</span></div>
+                    <div class="field fk">source_id <span class="field-type">INT</span></div>
+                    <div class="field">prompt_template <span class="field-type">TEXT</span></div>
+                    <div class="field">generation_params <span class="field-type">JSON</span></div>
+                    <div class="field">output_format <span class="field-type">VARCHAR</span></div>
+                    <div class="field">model_version <span class="field-type">VARCHAR</span></div>
+                    <div class="field">created_date <span class="field-type">TIMESTAMP</span></div>
+                </div>
+            </div>
+            
+            <!-- Quality & Lineage Tables -->
+            <div class="table-entity quality" style="top: 80px; left: 600px;">
+                <div class="table-header">DATA_LINEAGE</div>
+                <div class="table-fields">
+                    <div class="field pk">lineage_id <span class="field-type">INT</span></div>
+                    <div class="field fk">source_table_id <span class="field-type">INT</span></div>
+                    <div class="field fk">target_table_id <span class="field-type">INT</span></div>
+                    <div class="field">transformation_logic <span class="field-type">TEXT</span></div>
+                    <div class="field">lineage_type <span class="field-type">VARCHAR</span></div>
+                    <div class="field">created_date <span class="field-type">TIMESTAMP</span></div>
+                    <div class="field">status <span class="field-type">VARCHAR</span></div>
+                </div>
+            </div>
+            
+            <div class="table-entity quality" style="top: 80px; left: 870px;">
+                <div class="table-header">DATA_QUALITY_RULES</div>
+                <div class="table-fields">
+                    <div class="field pk">rule_id <span class="field-type">INT</span></div>
+                    <div class="field fk">table_id <span class="field-type">INT</span></div>
+                    <div class="field fk">column_id <span class="field-type">INT</span></div>
+                    <div class="field">rule_name <span class="field-type">VARCHAR</span></div>
+                    <div class="field">rule_type <span class="field-type">VARCHAR</span></div>
+                    <div class="field">rule_expression <span class="field-type">TEXT</span></div>
+                    <div class="field">is_active <span class="field-type">BOOLEAN</span></div>
+                </div>
+            </div>
+            
+            <div class="table-entity quality" style="top: 300px; left: 870px;">
+                <div class="table-header">DATA_QUALITY_RESULTS</div>
+                <div class="table-fields">
+                    <div class="field pk">result_id <span class="field-type">INT</span></div>
+                    <div class="field fk">rule_id <span class="field-type">INT</span></div>
+                    <div class="field">execution_date <span class="field-type">TIMESTAMP</span></div>
+                    <div class="field">pass_count <span class="field-type">INT</span></div>
+                    <div class="field">fail_count <span class="field-type">INT</span></div>
+                    <div class="field">score_percentage <span class="field-type">DECIMAL</span></div>
+                    <div class="field">status <span class="field-type">VARCHAR</span></div>
+                </div>
+            </div>
+            
+            <div class="table-entity quality" style="top: 520px; left: 870px;">
+                <div class="table-header">ETL_JOBS</div>
+                <div class="table-fields">
+                    <div class="field pk">job_id <span class="field-type">INT</span></div>
+                    <div class="field">job_name <span class="field-type">VARCHAR</span></div>
+                    <div class="field">description <span class="field-type">TEXT</span></div>
+                    <div class="field">schedule <span class="field-type">VARCHAR</span></div>
+                    <div class="field">last_run_date <span class="field-type">TIMESTAMP</span></div>
+                    <div class="field">status <span class="field-type">VARCHAR</span></div>
+                </div>
+            </div>
+            
+            <div class="table-entity quality" style="top: 720px; left: 600px;">
+                <div class="table-header">ETL_JOB_RUNS</div>
+                <div class="table-fields">
+                    <div class="field pk">run_id <span class="field-type">INT</span></div>
+                    <div class="field fk">job_id <span class="field-type">INT</span></div>
+                    <div class="field">start_time <span class="field-type">TIMESTAMP</span></div>
+                    <div class="field">end_time <span class="field-type">TIMESTAMP</span></div>
+                    <div class="field">status <span class="field-type">VARCHAR</span></div>
+                    <div class="field">records_processed <span class="field-type">BIGINT</span></div>
+                    <div class="field">error_message <span class="field-type">TEXT</span></div>
+                </div>
+            </div>
+            
+            <!-- Business Context Tables -->
+            <div class="table-entity business" style="top: 80px; left: 1150px;">
+                <div class="table-header">BUSINESS_GLOSSARY</div>
+                <div class="table-fields">
+                    <div class="field pk">term_id <span class="field-type">INT</span></div>
+                    <div class="field">term_name <span class="field-type">VARCHAR</span></div>
+                    <div class="field">definition <span class="field-type">TEXT</span></div>
+                    <div class="field">category <span class="field-type">VARCHAR</span></div>
+                    <div class="field">owner <span class="field-type">VARCHAR</span></div>
+                    <div class="field">status <span class="field-type">VARCHAR</span></div>
+                    <div class="field">created_date <span class="field-type">TIMESTAMP</span></div>
+                </div>
+            </div>
+            
+            <div class="table-entity business" style="top: 300px; left: 1150px;">
+                <div class="table-header">COLUMN_BUSINESS_TERMS</div>
+                <div class="table-fields">
+                    <div class="field pk">mapping_id <span class="field-type">INT</span></div>
+                    <div class="field fk">column_id <span class="field-type">INT</span></div>
+                    <div class="field fk">term_id <span class="field-type">INT</span></div>
+                    <div class="field">created_date <span class="field-type">TIMESTAMP</span></div>
+                    <div class="field">created_by <span class="field-type">VARCHAR</span></div>
+                </div>
+            </div>
+            
+            <div class="table-entity business" style="top: 80px; left: 1420px;">
+                <div class="table-header">DATA_STEWARDS</div>
+                <div class="table-fields">
+                    <div class="field pk">steward_id <span class="field-type">INT</span></div>
+                    <div class="field">steward_name <span class="field-type">VARCHAR</span></div>
+                    <div class="field">email <span class="field-type">VARCHAR</span></div>
+                    <div class="field">department <span class="field-type">VARCHAR</span></div>
+                    <div class="field">role <span class="field-type">VARCHAR</span></div>
+                    <div class="field">is_active <span class="field-type">BOOLEAN</span></div>
+                </div>
+            </div>
+            
+            <div class="table-entity business" style="top: 520px; left: 1150px;">
+                <div class="table-header">DATA_CLASSIFICATIONS</div>
+                <div class="table-fields">
+                    <div class="field pk">classification_id <span class="field-type">INT</span></div>
+                    <div class="field">classification_name <span class="field-type">VARCHAR</span></div>
+                    <div class="field">description <span class="field-type">TEXT</span></div>
+                    <div class="field">sensitivity_level <span class="field-type">VARCHAR</span></div>
+                    <div class="field">retention_period <span class="field-type">INT</span></div>
+                    <div class="field">compliance_rules <span class="field-type">TEXT</span></div>
+                </div>
+            </div>
+            
+            <div class="table-entity business" style="top: 720px; left: 1150px;">
+                <div class="table-header">COLUMN_CLASSIFICATIONS</div>
+                <div class="table-fields">
+                    <div class="field pk">mapping_id <span class="field-type">INT</span></div>
+                    <div class="field fk">column_id <span class="field-type">INT</span></div>
+                    <div class="field fk">classification_id <span class="field-type">INT</span></div>
+                    <div class="field">assigned_date <span class="field-type">TIMESTAMP</span></div>
+                    <div class="field">assigned_by <span class="field-type">VARCHAR</span></div>
+                </div>
+            </div>
+            
+            <div class="table-entity business" style="top: 300px; left: 1420px;">
+                <div class="table-header">TABLE_STEWARDS</div>
+                <div class="table-fields">
+                    <div class="field pk">assignment_id <span class="field-type">INT</span></div>
+                    <div class="field fk">table_id <span class="field-type">INT</span></div>
+                    <div class="field fk">steward_id <span class="field-type">INT</span></div>
+                    <div class="field">assigned_date <span class="field-type">TIMESTAMP</span></div>
+                    <div class="field">is_primary <span class="field-type">BOOLEAN</span></div>
+                </div>
+            </div>
+            
+            <!-- Security & Compliance Tables -->
+            <div class="table-entity security" style="top: 520px; left: 1420px;">
+                <div class="table-header">ACCESS_CONTROLS</div>
+                <div class="table-fields">
+                    <div class="field pk">control_id <span class="field-type">INT</span></div>
+                    <div class="field fk">resource_id <span class="field-type">INT</span></div>
+                    <div class="field fk">user_id <span class="field-type">INT</span></div>
+                    <div class="field">permission_type <span class="field-type">VARCHAR</span></div>
+                    <div class="field">granted_date <span class="field-type">TIMESTAMP</span></div>
+                    <div class="field">expiry_date <span class="field-type">TIMESTAMP</span></div>
+                    <div class="field">granted_by <span class="field-type">VARCHAR</span></div>
+                </div>
+            </div>
+            
+            <div class="table-entity security" style="top: 720px; left: 1420px;">
+                <div class="table-header">DATA_ENCRYPTION</div>
+                <div class="table-fields">
+                    <div class="field pk">encryption_id <span class="field-type">INT</span></div>
+                    <div class="field fk">dataset_id <span class="field-type">INT</span></div>
+                    <div class="field">encryption_type <span class="field-type">VARCHAR</span></div>
+                    <div class="field">key_management <span class="field-type">VARCHAR</span></div>
+                    <div class="field">encryption_status <span class="field-type">VARCHAR</span></div>
+                    <div class="field">last_key_rotation <span class="field-type">TIMESTAMP</span></div>
+                </div>
+            </div>
+            
+            <div class="table-entity security" style="top: 920px; left: 870px;">
+                <div class="table-header">COMPLIANCE_CHECKS</div>
+                <div class="table-fields">
+                    <div class="field pk">check_id <span class="field-type">INT</span></div>
+                    <div class="field">regulation_type <span class="field-type">VARCHAR</span></div>
+                    <div class="field">check_name <span class="field-type">VARCHAR</span></div>
+                    <div class="field">check_frequency <span class="field-type">VARCHAR</span></div>
+                    <div class="field">last_check_date <span class="field-type">TIMESTAMP</span></div>
+                    <div class="field">compliance_status <span class="field-type">VARCHAR</span></div>
+                    <div class="field">next_due_date <span class="field-type">TIMESTAMP</span></div>
+                </div>
+            </div>
+            
+            <!-- Legend -->
+            <div class="legend">
+                <div style="font-weight: bold; margin-bottom: 8px;">Legend</div>
+                <div class="legend-item">
+                    <div class="legend-box pk-legend"></div>
+                    <span>Primary Key (PK)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box fk-legend"></div>
+                    <span>Foreign Key (FK)</span>
+                </div>
+                <div class="legend-item">
+                    <div style="width: 15px; height: 2px; background: #6b7280;"></div>
+                    <span>Data Relationship</span>
+                </div>
+                <div class="legend-item">
+                    <div style="width: 15px; height: 2px; background: #f59e0b; border-top: 1px dashed #f59e0b;"></div>
+                    <span>Security Link</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

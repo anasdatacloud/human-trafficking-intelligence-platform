@@ -1,0 +1,264 @@
+CREATE SCHEMA Silver;
+
+
+CREATE  TABLE Silver.DimDateTime (
+    DateID INT IDENTITY(1,1),
+    FullDate DATE NOT NULL,
+    DayOfMonth int,
+    DayOfWeek int,
+    DayName VARCHAR(255),
+    IsWeekend BIT,
+    WeekOfYear int,
+    Month int,
+    MonthName VARCHAR(255),
+    Quarter int,
+    Year INT
+);
+
+CREATE  TABLE Silver.DimLocation (
+    LocationID INT IDENTITY(1,1),
+    Address VARCHAR(255),
+    District VARCHAR(255),
+    State VARCHAR(255),
+    Country VARCHAR(255),
+    Urban_Rural VARCHAR(255),
+    Latitude FLOAT,
+    Longitude FLOAT,
+    Zipcode VARCHAR(255)
+);
+
+CREATE  TABLE Silver.DimVictim (
+    VictimID INT IDENTITY(1,1),
+    VictimSK INT,
+    NationalID VARCHAR(255),
+    Name VARCHAR(255),
+    Age VARCHAR(255),
+    PhoneNumber VARCHAR(255),
+    DOB DATE,
+    RaceEthnicity VARCHAR(255),
+    MaritalStatus VARCHAR(255),
+    Gender VARCHAR(255),
+    Nationality VARCHAR(255)
+);
+
+CREATE TABLE Silver.DimTrafficker (
+    TraffickerID INT IDENTITY(1,1),
+    TraffickerSK INT,
+    NationalID VARCHAR(255),
+    Name VARCHAR(255),
+    Alias VARCHAR(255),
+    Gender VARCHAR(255),
+    Age VARCHAR(255),
+    Role VARCHAR(255),
+    Affiliation VARCHAR(255),
+    Nationality VARCHAR(255),
+    RaceEthnicity VARCHAR(255),
+    DOB DATE,
+    PhoneNumber VARCHAR(255),
+    ConvictionStatus VARCHAR(255)
+);
+
+CREATE  TABLE Silver.DimTransportationType (
+    TransportationTypeID INT IDENTITY(1,1),
+    TransportationMode VARCHAR(255),
+    TransportationMethod VARCHAR(255)
+);
+
+CREATE TABLE Silver.DimRecruitmentType (
+    RecruitmentTypeID INT IDENTITY(1,1),
+    RecruitmentTypeName VARCHAR(255),
+    Description VARCHAR(255)
+);
+
+CREATE  TABLE Silver.DimExploitationType (
+    ExploitationTypeID INT IDENTITY(1,1),
+    ExploitationType VARCHAR(255),
+    ExploitationSubtype VARCHAR(255)
+);
+
+CREATE TABLE Silver.DimOperation (
+    OperationID INT IDENTITY(1,1),
+    OperationSK INT,
+    InterventionType VARCHAR(255),
+    InterventionSubtype VARCHAR(255),
+    OperationName VARCHAR(255),
+    OperationDuration INT
+);
+
+
+
+
+
+
+
+
+
+select * from truncate table Bronze.Synthetic_HumanTraffickingCases
+CREATE TABLE Bronze.Synthetic_HumanTraffickingCases (
+    Report_ID VARCHAR(255),
+    Case_Date DATE,
+    Case_Time TIME,
+    Report_Source VARCHAR(255),
+    Case_Status VARCHAR(255),
+    Case_Description VARCHAR(4000),
+
+    Victim_Name VARCHAR(255),
+    Victim_Count VARCHAR(255),
+    Victim_Age VARCHAR(255),
+    Victim_Gender VARCHAR(255),
+    Victim_Nationality VARCHAR(255),
+    Victim_Health_Condition VARCHAR(255),
+    Victim_Vulnerabilities VARCHAR(255),
+
+    Exploitation_Type VARCHAR(255),
+    Exploitation_Industry VARCHAR(255),
+    Duration_of_Exploitation VARCHAR(255),
+    Exploitation_Start_Date DATE,
+    Exploitation_End_Date DATE,
+
+    Recruitment_Method VARCHAR(255),
+    TransportationMode VARCHAR(255),
+    Control_Method VARCHAR(255),
+
+    Origin_Country VARCHAR(255),
+    Origin_City VARCHAR(255),
+    Exploitation_Country VARCHAR(255),
+    Exploitation_City VARCHAR(255),
+    Location_of_Exploitation VARCHAR(255),
+    Border_Proximity VARCHAR(255),
+    Route_Taken VARCHAR(4000),
+
+    Intervention_Type VARCHAR(255),
+    Intervention_Date DATE,
+    Intervention_Outcome VARCHAR(255),
+    Victim_Assisted_Flag VARCHAR(255),
+    Assistance_Type VARCHAR(255),
+    Agency_Involved VARCHAR(255),
+
+    Trafficking_Network_Name VARCHAR(255),
+    Trafficker_Name VARCHAR(255),
+    Trafficker_Gender VARCHAR(255),
+    Trafficker_Nationality VARCHAR(255)
+);
+
+
+
+
+CREATE PROCEDURE Silver.LoadDimensionsFromBronze
+AS
+BEGIN
+    -- Insert into DimDateTime from Case_Date
+    INSERT INTO silver.DimDateTime (FullDate)
+    SELECT  CAST(Case_Date AS DATE) AS FullDate
+    FROM bronze.Synthetic_HumanTraffickingCases b
+    LEFT JOIN silver.DimDateTime d ON d.FullDate = CAST(b.Case_Date AS DATE)
+    WHERE d.DateID IS NULL;
+
+    -- Insert into DimVictim
+    INSERT INTO silver.DimVictim (Name, Age, Gender, Nationality)
+    SELECT  
+        b.Victim_Name,
+        b.Victim_Age,
+        b.Victim_Gender,
+        b.Victim_Nationality
+    FROM bronze.Synthetic_HumanTraffickingCases b
+    LEFT JOIN silver.DimVictim v ON 
+        v.Name = b.Victim_Name AND
+        v.Age = b.Victim_Age AND
+        v.Gender = b.Victim_Gender AND
+        v.Nationality = b.Victim_Nationality
+    WHERE v.VictimID IS NULL;
+
+    -- Insert into DimTrafficker
+    INSERT INTO silver.DimTrafficker (Name, Gender, Nationality)
+    SELECT  
+        b.Trafficker_Name,
+        b.Trafficker_Gender,
+        b.Trafficker_Nationality
+    FROM bronze.Synthetic_HumanTraffickingCases b
+    LEFT JOIN silver.DimTrafficker t ON 
+        t.Name = b.Trafficker_Name AND
+        t.Gender = b.Trafficker_Gender AND
+        t.Nationality = b.Trafficker_Nationality
+    WHERE t.TraffickerID IS NULL;
+
+    -- Insert into DimTransportationType
+    INSERT INTO silver.DimTransportationType (TransportationMode)
+    SELECT  b.TransportationMode
+    FROM bronze.Synthetic_HumanTraffickingCases b
+    LEFT JOIN silver.DimTransportationType t ON t.TransportationMode = b.TransportationMode
+    WHERE t.TransportationTypeID IS NULL;
+
+    -- Insert into DimRecruitmentType
+    INSERT INTO silver.DimRecruitmentType (RecruitmentTypeName)
+    SELECT  b.Recruitment_Method
+    FROM bronze.Synthetic_HumanTraffickingCases b
+    LEFT JOIN silver.DimRecruitmentType r ON r.RecruitmentTypeName = b.Recruitment_Method
+    WHERE r.RecruitmentTypeID IS NULL;
+
+    -- Insert into DimExploitationType
+    INSERT INTO silver.DimExploitationType (ExploitationType)
+    SELECT  b.Exploitation_Type
+    FROM bronze.Synthetic_HumanTraffickingCases b
+    LEFT JOIN silver.DimExploitationType e ON e.ExploitationType = b.Exploitation_Type
+    WHERE e.ExploitationTypeID IS NULL;
+
+    -- Insert into DimOperation
+    INSERT INTO silver.DimOperation (InterventionType)
+    SELECT  b.Intervention_Type
+    FROM bronze.Synthetic_HumanTraffickingCases b
+    LEFT JOIN silver.DimOperation o ON o.InterventionType = b.Intervention_Type
+    WHERE o.OperationID IS NULL;
+
+    -- Insert into DimLocation (Location of Exploitation)
+    INSERT INTO silver.DimLocation (Address, Country, Urban_Rural)
+    SELECT  
+        b.Location_of_Exploitation,
+        b.Exploitation_Country,
+        b.Location_of_Exploitation AS Urban_Rural
+    FROM bronze.Synthetic_HumanTraffickingCases b
+    LEFT JOIN silver.DimLocation l ON 
+        l.Address = b.Location_of_Exploitation AND
+        l.Country = b.Exploitation_Country
+    WHERE l.LocationID IS NULL;
+
+END;
+GO
+
+
+
+
+
+
+
+SELECT * FROM Bronze.Synthetic_HumanTraffickingCases;
+SELECT * FROM Silver.DimDateTime;
+SELECT * FROM Silver.DimLocation;
+SELECT * FROM Silver.DimVictim;
+SELECT * FROM Silver.DimTrafficker;
+SELECT * FROM Silver.DimTransportationType;
+SELECT * FROM Silver.DimRecruitmentType;
+SELECT * FROM Silver.DimExploitationType;
+SELECT * FROM Silver.DimOperation;
+
+
+
+
+SELECT 'Silver.DimDateTime' AS TableName, COUNT(*) AS TotalRows FROM Silver.DimDateTime;
+SELECT 'Silver.DimLocation' AS TableName, COUNT(*) AS TotalRows FROM Silver.DimLocation;
+SELECT 'Silver.DimVictim' AS TableName, COUNT(*) AS TotalRows FROM Silver.DimVictim;
+SELECT 'Silver.DimTrafficker' AS TableName, COUNT(*) AS TotalRows FROM Silver.DimTrafficker;
+SELECT 'Silver.DimTransportationType' AS TableName, COUNT(*) AS TotalRows FROM Silver.DimTransportationType;
+SELECT 'Silver.DimRecruitmentType' AS TableName, COUNT(*) AS TotalRows FROM Silver.DimRecruitmentType;
+SELECT 'Silver.DimExploitationType' AS TableName, COUNT(*) AS TotalRows FROM Silver.DimExploitationType;
+SELECT 'Silver.DimOperation' AS TableName, COUNT(*) AS TotalRows FROM Silver.DimOperation;
+
+
+
+select * from metadata.fileprocessinglog;
+select * from metadata.pipelinerunlog;
+
+
+
+
+

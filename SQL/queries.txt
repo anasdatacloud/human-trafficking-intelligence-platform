@@ -1,0 +1,235 @@
+
+CREATE TABLE "Dim"."Agency"
+    (
+        AgencyId INT,
+        AgencyName VARCHAR(255),
+        Acronym VARCHAR(255),
+        AgencyType VARCHAR(255)
+    )
+
+
+CREATE DATABASE SCOPED CREDENTIAL MyScopedCred
+WITH
+  IDENTITY = 'Managed Identity'; 
+
+CREATE EXTERNAL DATA SOURCE MyExternalDataSource
+WITH (
+    LOCATION = 'https://qaihumantraffickingdl.dfs.core.windows.net/',
+    CREDENTIAL = MyScopedCred
+);
+
+
+COPY INTO "Dim"."Agency"
+FROM 'https://qaihumantraffickingdl.dfs.core.windows.net/qaihumantraffickingfs/Dim/DimVictim.csv'
+WITH (
+    FILE_TYPE = 'CSV',
+    FIRSTROW = 2,
+    CREDENTIAL = (IDENTITY = 'Managed Identity') 
+);
+
+drop Table "Dim"."Agency"
+select * from "Dim"."Agency";
+
+
+
+
+CREATE TABLE "Dim"."DateTime"
+(
+    "DateID" INT, 
+    "FullDate" DATE, 
+    "DayOfMonth" INT, 
+    "DayOfWeek" INT, 
+    "DayName" VARCHAR(255), 
+    "IsWeekend" Bit, 
+    "WeekOfYear" INT, 
+    "Month" INT, 
+    "MonthName" VARCHAR(255), 
+    "Quarter" INT, 
+    "Year" INT
+);
+
+copy into "Dim"."DateTime"
+from 'https://qaihumantraffickingdl.dfs.core.windows.net/qaihumantraffickingfs/Dim/DimDate.csv'
+with(
+    FILE_TYPE='CSV',
+    FIRSTROW = 2,
+    CREDENTIAL = (IDENTITY = 'Managed Identity')
+)
+
+select * from "Dim"."DateTime";
+
+
+
+CREATE TABLE "Dim"."Location"
+(
+    "LocationID" INT,
+    "Address" VARCHAR(255),
+    "District" VARCHAR(255),
+    "Province" VARCHAR(255),
+    "Country" VARCHAR(255),
+    "UrbanRural" VARCHAR(255),
+    "Latitude" DECIMAL(9,6),
+    "Longitude" DECIMAL(9,6),
+    "ZipCode" INT
+)
+WITH
+(
+    DISTRIBUTION = ROUND_ROBIN,
+    CLUSTERED COLUMNSTORE INDEX
+);
+
+copy into "Dim"."Location"
+    from 'https://qaihumantraffickingdl.dfs.core.windows.net/qaihumantraffickingfs/Dim/DimLocation.csv'
+with (
+    FILE_TYPE='CSV',
+    FIRSTROW = 2,
+    CREDENTIAL = (IDENTITY = 'Managed Identity')
+)
+
+select * from "Dim"."Location";
+
+
+CREATE TABLE "Dim"."Victim"
+(
+    "VictimID" INT,
+    "NationalID" VARCHAR(255),
+    "Name" VARCHAR(255),
+    "Age" INT,
+    "PhoneNumber" VARCHAR(255),
+    "DOB" DATE,
+    "RaceEthnicity" VARCHAR(255),
+    "MaritalStatus" VARCHAR(255),
+    "Gender" VARCHAR(255),
+    "Nationality" VARCHAR(255)
+)
+WITH
+(
+    DISTRIBUTION = ROUND_ROBIN,
+    CLUSTERED COLUMNSTORE INDEX
+);
+
+copy into "Dim"."Victim"
+from 'https://qaihumantraffickingdl.dfs.core.windows.net/qaihumantraffickingfs/Dim/DimVictim.csv'
+with(
+    FILE_TYPE='CSV',
+    FIRSTROW = 2,
+    CREDENTIAL = (IDENTITY = 'Managed Identity')
+)
+select * from "Dim"."Victim";
+
+
+CREATE TABLE "Dim"."Trafficker"
+(
+    "TraffickerID" INT,
+    "NationalID" VARCHAR(255),
+    "Name" VARCHAR(255),
+    "Alias" VARCHAR(255),
+    "Gender" VARCHAR(255),
+    "Age" INT,
+    "Role" VARCHAR(255),
+    "Affiliation" VARCHAR(255),
+    "Nationality" VARCHAR(255),
+    "RaceEthnicity" VARCHAR(255),
+    "DOB" DATE,
+    "PhoneNumber" VARCHAR(255),
+    "ConvictionStatus" BIT
+)
+WITH
+(
+    DISTRIBUTION = ROUND_ROBIN,
+    CLUSTERED COLUMNSTORE INDEX
+);
+
+drop TABLE "Dim"."Trafficker"
+    
+copy into "Dim"."Trafficker"
+from 'https://qaihumantraffickingdl.dfs.core.windows.net/qaihumantraffickingfs/Dim/DimTrafficker.csv'
+with(
+    FILE_TYPE='CSV',
+    FIRSTROW = 2,
+    CREDENTIAL = (IDENTITY = 'Managed Identity')
+    )
+
+select * from "Dim"."Trafficker";
+
+CREATE TABLE "Dim"."RecruitmentType"
+(
+    "RecruitmentTypeID" INT,
+    "RecruitmentTypeName" VARCHAR(255),
+    "Description" VARCHAR(999)
+)
+WITH
+(
+    DISTRIBUTION = ROUND_ROBIN,
+    CLUSTERED COLUMNSTORE INDEX
+);
+
+
+copy into "Dim"."RecruitmentType"
+from 'https://qaihumantraffickingdl.dfs.core.windows.net/qaihumantraffickingfs/Dim/DimRecruitmentType.csv'
+with(
+    FILE_TYPE='CSV',
+    FIRSTROW = 2,
+    CREDENTIAL = (IDENTITY = 'Managed Identity')
+    )
+
+select * from "Dim"."RecruitmentType"
+
+
+
+CREATE TABLE "Dim"."TransportationType"
+(
+    "TransportationTypeID" INT,
+    "TransportationMode" VARCHAR(255),
+    "TransportationMethod" VARCHAR(255)
+)
+WITH
+(
+    DISTRIBUTION = ROUND_ROBIN,
+    CLUSTERED COLUMNSTORE INDEX
+);
+drop table "Dim"."TransportationType";
+copy into "Dim"."TransportationType"
+from 'https://qaihumantraffickingdl.dfs.core.windows.net/qaihumantraffickingfs/Dim/DimTransportationType.csv'
+with(
+    FILE_TYPE='CSV',
+    FIRSTROW = 2,
+    CREDENTIAL = (IDENTITY = 'Managed Identity')
+    )
+
+select * from "Dim"."TransportationType";
+
+
+
+CREATE TABLE "Dim"."ExploitationType"
+(
+    "ExploitationTypeID" INT,
+    "ExploitationType" VARCHAR(255),
+    "ExploitationSubType" VARCHAR(999)
+)
+WITH
+(
+    DISTRIBUTION = ROUND_ROBIN,
+    CLUSTERED COLUMNSTORE INDEX
+);
+
+copy into "Dim"."TransportationType"
+from 'https://qaihumantraffickingdl.dfs.core.windows.net/qaihumantraffickingfs/Dim/DimTransportationType.csv'
+with(
+    FILE_TYPE='CSV',
+    FIRSTROW = 2,
+    CREDENTIAL = (IDENTITY = 'Managed Identity')
+    )
+
+select * from "Dim"."TransportationType";
+
+
+
+
+
+
+
+
+
+
+
